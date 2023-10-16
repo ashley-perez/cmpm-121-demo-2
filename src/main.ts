@@ -29,11 +29,22 @@ const clearButton = document.createElement("button");
 clearButton.innerText = "clear";
 buttonContainer.append(clearButton);
 
+// add undo button
+const undoButton = document.createElement("button");
+undoButton.innerText = "undo";
+buttonContainer.append(undoButton);
+
+// add redo button
+const redoButton = document.createElement("button");
+redoButton.innerText = "redo";
+buttonContainer.append(redoButton);
+
 const canvasContext = canvas.getContext("2d")!;
 let cursorIsMoving = false;
 
-const lines: { x: number, y: number }[][] = [];
-let currentLineDrawn: { x: number, y: number }[] = [];
+const lines: { x: number; y: number }[][] = [];
+const redoStack: { x: number; y: number }[][] = [];
+let currentLineDrawn: { x: number; y: number }[] = [];
 
 // see if mouse is down
 canvas.addEventListener("mousedown", () => {
@@ -46,18 +57,56 @@ canvas.addEventListener("mousedown", () => {
 canvas.addEventListener("mouseup", () => {
     cursorIsMoving = false;
     if (currentLineDrawn.length) {
+        // lines.push([...currentLineDrawn]);
         lines.push(currentLineDrawn);
     }
     canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
+// lots of braincells were used unfortuneatly
 canvas.addEventListener("mousemove", (event) => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
     if (cursorIsMoving) {
-        currentLineDrawn.push({ x, y });  // save points
+        currentLineDrawn.push({ x, y });
+
+        // Clear the canvas
+        canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+
+        // Redraw all lines
+        for (const line of lines) {
+            canvasContext.beginPath();
+            for (const point of line) {
+                canvasContext.lineTo(point.x, point.y);
+                canvasContext.stroke();
+            }
+        }
+
+        // Draw the current line being drawn
+        canvasContext.beginPath();
+        for (const point of currentLineDrawn) {
+            canvasContext.lineTo(point.x, point.y);
+            canvasContext.stroke();
+        }
+    }
+});
+
+undoButton.addEventListener("click", () => {
+    console.log("in undo button");
+    if (lines.length > 0) {
+        const lastLine = lines.pop(); // pop latest item
+        redoStack.push(lastLine!); // push to stack but it could possible be null
+        canvas.dispatchEvent(new Event("drawing-changed"));
+    }
+});
+
+redoButton.addEventListener("click", () => {
+    console.log("in redo button");
+    if (redoStack.length > 0) {
+        const lineToRedo = redoStack.pop(); // pop latest item
+        lines.push(lineToRedo!);
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
 });
@@ -73,20 +122,14 @@ canvas.addEventListener("drawing-changed", () => {
             canvasContext.stroke();
         }
     }
-
-    // draw current line if it exists
-    if (currentLineDrawn.length) {
-        canvasContext.beginPath();
-        for (const point of currentLineDrawn) {
-            canvasContext.lineTo(point.x, point.y);
-            canvasContext.stroke();
-        }
-    }
 });
 
 // implement the clear button fucntionality
 clearButton.addEventListener("click", () => {
     canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+
+    // clear these lists/stacks or else it will be remembered
     lines.length = 0;
     currentLineDrawn.length = 0;
+    redoStack.length = 0;
 });
