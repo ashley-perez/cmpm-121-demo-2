@@ -10,6 +10,8 @@ const header = document.createElement("h1");
 header.innerHTML = gameName;
 app.append(header);
 
+const zero = 0;
+
 // canvas to draw on
 const canvas = document.createElement("canvas");
 canvas.width = 256;
@@ -17,10 +19,12 @@ canvas.height = 256;
 canvas.id = "Canvas";
 app.append(canvas);
 
+// create a container for the buttons and use flex
 const buttonContainer = document.createElement("div");
 buttonContainer.id = "buttonContainer";
 app.append(buttonContainer);
 
+// creating the clear button
 const clearButton = document.createElement("button");
 clearButton.innerText = "clear";
 buttonContainer.append(clearButton);
@@ -28,42 +32,61 @@ buttonContainer.append(clearButton);
 const canvasContext = canvas.getContext("2d")!;
 let cursorIsMoving = false;
 
+const lines: { x: number, y: number }[][] = [];
+let currentLineDrawn: { x: number, y: number }[] = [];
+
 // see if mouse is down
 canvas.addEventListener("mousedown", () => {
     cursorIsMoving = true;
-    console.log("IN HERE");
+    currentLineDrawn = []; // initialize line
+    console.log("HELLO???");
 });
 
-// if mouse is up then stop drawing and reset the path
+// if mouse is up then stop drawing
 canvas.addEventListener("mouseup", () => {
     cursorIsMoving = false;
-    canvasContext.beginPath();
+    if (currentLineDrawn.length) {
+        lines.push(currentLineDrawn);
+    }
+    canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
-canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mousemove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
 
-// lets actually draw
-function draw(event: MouseEvent) {
-    if (!cursorIsMoving) {
-        return;
+    if (cursorIsMoving) {
+        currentLineDrawn.push({ x, y });  // save points
+        canvas.dispatchEvent(new Event("drawing-changed"));
+    }
+});
+
+canvas.addEventListener("drawing-changed", () => {
+    // clear the canvas or else it will persist
+    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+
+    for (const line of lines) {
+        canvasContext.beginPath();
+        for (const point of line) {
+            canvasContext.lineTo(point.x, point.y);
+            canvasContext.stroke();
+        }
     }
 
-    canvasContext.lineWidth = 2;
-    canvasContext.lineCap = "round";
+    // draw current line if it exists
+    if (currentLineDrawn.length) {
+        canvasContext.beginPath();
+        for (const point of currentLineDrawn) {
+            canvasContext.lineTo(point.x, point.y);
+            canvasContext.stroke();
+        }
+    }
+});
 
-    canvasContext.lineTo(
-        event.clientX - canvas.offsetLeft,
-        event.clientY - canvas.offsetTop,
-    );
-    canvasContext.stroke();
-    canvasContext.beginPath();
-    canvasContext.moveTo(
-        event.clientX - canvas.offsetLeft,
-        event.clientY - canvas.offsetTop,
-    );
-}
-
-const zero = 0;
+// implement the clear button fucntionality
 clearButton.addEventListener("click", () => {
     canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+    lines.length = 0;
+    currentLineDrawn.length = 0;
 });
