@@ -63,6 +63,7 @@ function draw(event: MouseEvent) {
     );
 }
 
+const zero = 0;
 clearButton.addEventListener("click", () => {
-    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
 });
