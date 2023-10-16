@@ -95,7 +95,7 @@ canvas.addEventListener("mousemove", (event) => {
 
 undoButton.addEventListener("click", () => {
     console.log("in undo button");
-    if (lines.length > 0) {
+    if (lines.length) {
         const lastLine = lines.pop(); // pop latest item
         redoStack.push(lastLine!); // push to stack but it could possible be null
         canvas.dispatchEvent(new Event("drawing-changed"));
@@ -104,7 +104,7 @@ undoButton.addEventListener("click", () => {
 
 redoButton.addEventListener("click", () => {
     console.log("in redo button");
-    if (redoStack.length > 0) {
+    if (redoStack.length) {
         const lineToRedo = redoStack.pop(); // pop latest item
         lines.push(lineToRedo!);
         canvas.dispatchEvent(new Event("drawing-changed"));
