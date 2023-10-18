@@ -1,4 +1,5 @@
 import "./style.css";
+import { Line } from "./Line.ts";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
@@ -42,94 +43,71 @@ buttonContainer.append(redoButton);
 const canvasContext = canvas.getContext("2d")!;
 let cursorIsMoving = false;
 
-const lines: { x: number; y: number }[][] = [];
-const redoStack: { x: number; y: number }[][] = [];
-let currentLineDrawn: { x: number; y: number }[] = [];
+const lines: Line[] = [];
+let currentLine: Line | null = null;
+const redoStack: Line[] = [];
 
-// see if mouse is down
-canvas.addEventListener("mousedown", () => {
+// see if mouse is down and do things
+canvas.addEventListener("mousedown", (event) => {
     cursorIsMoving = true;
-    currentLineDrawn = []; // initialize line
-    console.log("HELLO???");
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    currentLine = new Line(x, y);
 });
 
 // if mouse is up then stop drawing
 canvas.addEventListener("mouseup", () => {
-    cursorIsMoving = false;
-    if (currentLineDrawn.length) {
-        // lines.push([...currentLineDrawn]);
-        lines.push(currentLineDrawn);
+    if (currentLine) {
+        lines.push(currentLine);
+        currentLine = null;
     }
+    cursorIsMoving = false;
     canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
 // lots of braincells were used unfortuneatly
 canvas.addEventListener("mousemove", (event) => {
+    if (!cursorIsMoving || !currentLine) return;
+
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    if (cursorIsMoving) {
-        currentLineDrawn.push({ x, y });
+    currentLine.extendLine(x, y);
 
-        // Clear the canvas
-        canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-
-        // Redraw all lines
-        for (const line of lines) {
-            canvasContext.beginPath();
-            for (const point of line) {
-                canvasContext.lineTo(point.x, point.y);
-                canvasContext.stroke();
-            }
-        }
-
-        // Draw the current line being drawn
-        canvasContext.beginPath();
-        for (const point of currentLineDrawn) {
-            canvasContext.lineTo(point.x, point.y);
-            canvasContext.stroke();
-        }
+    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+    lines.forEach((cmd) => cmd.display(canvasContext));
+    if (currentLine) {
+        currentLine.display(canvasContext);
     }
 });
 
+// undo and redo button click event
 undoButton.addEventListener("click", () => {
-    console.log("in undo button");
     if (lines.length) {
-        const lastLine = lines.pop(); // pop latest item
-        redoStack.push(lastLine!); // push to stack but it could possible be null
+        const lastCommand = lines.pop();
+        redoStack.push(lastCommand!);
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
 });
 
 redoButton.addEventListener("click", () => {
-    console.log("in redo button");
     if (redoStack.length) {
-        const lineToRedo = redoStack.pop(); // pop latest item
-        lines.push(lineToRedo!);
+        const commandToRedo = redoStack.pop();
+        lines.push(commandToRedo!);
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
 });
 
 canvas.addEventListener("drawing-changed", () => {
-    // clear the canvas or else it will persist
     canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-
-    for (const line of lines) {
-        canvasContext.beginPath();
-        for (const point of line) {
-            canvasContext.lineTo(point.x, point.y);
-            canvasContext.stroke();
-        }
-    }
+    lines.forEach((cmd) => cmd.display(canvasContext));
 });
 
 // implement the clear button fucntionality
 clearButton.addEventListener("click", () => {
     canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-
-    // clear these lists/stacks or else it will be remembered
     lines.length = 0;
-    currentLineDrawn.length = 0;
     redoStack.length = 0;
 });
