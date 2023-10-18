@@ -37,8 +37,13 @@ export class LinePreview {
 
     // readonly is basically like const
     // from my understanding...
+
+    // im sorry i have to...
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     private static readonly start = 0;
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     private static readonly end = 2 * Math.PI;
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     private static readonly two = 2;
 
     constructor(x: number, y: number, thickness: number) {
