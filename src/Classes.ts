@@ -1,4 +1,8 @@
-export class Line {
+export interface DrawableItem {
+    display(context: CanvasRenderingContext2D): void;
+}
+
+export class Line implements DrawableItem {
     private points: { x: number; y: number }[] = [];
     public thickness: number;
 
@@ -56,5 +60,24 @@ export class LinePreview {
         context.beginPath();
         context.arc(this.x, this.y, this.thickness / LinePreview.two, LinePreview.start, LinePreview.end); // circle to represent the tool thickness
         context.fill();
+    }
+}
+
+export class Sticker implements DrawableItem {
+    x: number;
+    y: number;
+    emoji: string;
+    size: number;
+
+    constructor(x: number, y: number, emoji: string, size: number) {
+        this.x = x;
+        this.y = y;
+        this.emoji = emoji;
+        this.size = size;
+    }
+
+    display(context: CanvasRenderingContext2D) {
+        context.font = `${this.size}px serif`;
+        context.fillText(this.emoji, this.x, this.y);
     }
 }

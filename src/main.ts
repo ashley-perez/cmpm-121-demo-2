@@ -1,5 +1,5 @@
 import "./style.css";
-import { Line, LinePreview } from "./Classes.ts";
+import { Line, LinePreview, Sticker, DrawableItem } from "./Classes.ts";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
@@ -15,6 +15,7 @@ const zero = 0;
 const thin = 2;
 const thick = 5;
 let currentThickness = 2;
+const stickerSize = 20;
 
 // canvas to draw on
 const canvas = document.createElement("canvas");
@@ -53,12 +54,44 @@ const thickMarkerButton = document.createElement("button");
 thickMarkerButton.innerText = "thick";
 buttonContainer.append(thickMarkerButton);
 
+
+// sticker buttons
+const starStickerButton = document.createElement("button");
+starStickerButton.innerText = "⭐";
+buttonContainer.append(starStickerButton);
+
+const rainbowStickerButton = document.createElement("button");
+rainbowStickerButton.innerText = "🌈";
+buttonContainer.append(rainbowStickerButton);
+
+const turtleStickerButton = document.createElement("button");
+turtleStickerButton.innerText = "🐢";
+buttonContainer.append(turtleStickerButton);
+
+let currentSticker: string | null = null;
+
+rainbowStickerButton.addEventListener("click", () => {
+  currentSticker = "🌈";
+  canvas.dispatchEvent(new Event("tool-changed"));
+});
+
+starStickerButton.addEventListener("click", () => {
+  currentSticker = "⭐";
+  canvas.dispatchEvent(new Event("tool-changed"));
+});
+
+turtleStickerButton.addEventListener("click", () => {
+  currentSticker = "🐢";
+  canvas.dispatchEvent(new Event("tool-changed"));
+});
+
+
 const canvasContext = canvas.getContext("2d")!;
 let cursorIsMoving = false;
 
-const lines: Line[] = [];
+const lines: DrawableItem[] = [];
+const redoStack: DrawableItem[] = [];
 let currentLine: Line | null = null;
-const redoStack: Line[] = [];
 
 let toolPreview: LinePreview | null = null;
 
@@ -71,6 +104,13 @@ canvas.addEventListener("mousedown", (event) => {
   currentLine = new Line(x, y, currentThickness);
 
   toolPreview = null; // so we dont show the preview when clicking
+
+  if (currentSticker) {
+    const sticker = new Sticker(x, y, currentSticker, stickerSize);
+    lines.push(sticker);
+    currentSticker = null;
+    canvas.dispatchEvent(new Event("drawing-changed"));
+  }
 });
 
 // if mouse is up then stop drawing
@@ -104,6 +144,15 @@ canvas.addEventListener("mousemove", (event) => {
   if (!cursorIsMoving) {
     toolPreview = new LinePreview(x, y, currentThickness);
     canvas.dispatchEvent(new Event("tool-moved"));
+  }
+
+  // sticker moment
+  if (currentSticker && !cursorIsMoving) {
+    // show the sticker preview
+    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+    lines.forEach((cmd) => cmd.display(canvasContext));
+    canvasContext.font = "20px serif";
+    canvasContext.fillText(currentSticker, x, y);
   }
 });
 
