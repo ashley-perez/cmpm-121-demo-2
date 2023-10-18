@@ -1,5 +1,5 @@
 import "./style.css";
-import { Line } from "./Line.ts";
+import { Line, LinePreview } from "./Classes.ts";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
@@ -60,80 +60,103 @@ const lines: Line[] = [];
 let currentLine: Line | null = null;
 const redoStack: Line[] = [];
 
+let toolPreview: LinePreview | null = null;
+
 // see if mouse is down and do things
 canvas.addEventListener("mousedown", (event) => {
-    cursorIsMoving = true;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    currentLine = new Line(x, y, currentThickness);
+  cursorIsMoving = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  currentLine = new Line(x, y, currentThickness);
+
+  toolPreview = null; // so we dont show the preview when clicking
 });
 
 // if mouse is up then stop drawing
 canvas.addEventListener("mouseup", () => {
-    if (currentLine) {
-        lines.push(currentLine);
-        currentLine = null;
-    }
-    cursorIsMoving = false;
-    canvas.dispatchEvent(new Event("drawing-changed"));
+  if (currentLine) {
+    lines.push(currentLine);
+    currentLine = null;
+  }
+  cursorIsMoving = false;
+  canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
 // lots of braincells were used unfortuneatly
+// im tired
 canvas.addEventListener("mousemove", (event) => {
-    if (!cursorIsMoving || !currentLine) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
+  // start drawing the line
+  if (cursorIsMoving && currentLine) {
     currentLine.extendLine(x, y);
-
     canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
     lines.forEach((cmd) => cmd.display(canvasContext));
     if (currentLine) {
-        currentLine.display(canvasContext);
+      currentLine.display(canvasContext);
     }
+  }
+
+  // show the preview
+  if (!cursorIsMoving) {
+    toolPreview = new LinePreview(x, y, currentThickness);
+    canvas.dispatchEvent(new Event("tool-moved"));
+  }
 });
 
 // undo and redo button click event
 undoButton.addEventListener("click", () => {
-    if (lines.length) {
-        const lastCommand = lines.pop();
-        redoStack.push(lastCommand!);
-        canvas.dispatchEvent(new Event("drawing-changed"));
-    }
+  if (lines.length) {
+    const lastCommand = lines.pop();
+    redoStack.push(lastCommand!);
+    canvas.dispatchEvent(new Event("drawing-changed"));
+  }
 });
 
 redoButton.addEventListener("click", () => {
-    if (redoStack.length) {
-        const commandToRedo = redoStack.pop();
-        lines.push(commandToRedo!);
-        canvas.dispatchEvent(new Event("drawing-changed"));
-    }
+  if (redoStack.length) {
+    const commandToRedo = redoStack.pop();
+    lines.push(commandToRedo!);
+    canvas.dispatchEvent(new Event("drawing-changed"));
+  }
 });
 
 // change line thickness
 thinMarkerButton.addEventListener("click", function () {
-    currentThickness = thin;
-    thinMarkerButton.classList.add("selectedTool");
-    thickMarkerButton.classList.remove("selectedTool");
+  currentThickness = thin;
+  thinMarkerButton.classList.add("selectedTool");
+  thickMarkerButton.classList.remove("selectedTool");
 });
 
 thickMarkerButton.addEventListener("click", function () {
-    currentThickness = thick;
-    thickMarkerButton.classList.add("selectedTool");
-    thinMarkerButton.classList.remove("selectedTool");
+  currentThickness = thick;
+  thickMarkerButton.classList.add("selectedTool");
+  thinMarkerButton.classList.remove("selectedTool");
 });
 
 canvas.addEventListener("drawing-changed", () => {
-    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.forEach((cmd) => cmd.display(canvasContext));
+  canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+  lines.forEach((cmd) => cmd.display(canvasContext));
 });
 
 // implement the clear button fucntionality
 clearButton.addEventListener("click", () => {
-    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.length = 0;
-    redoStack.length = 0;
+  canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+  lines.length = 0;
+  redoStack.length = 0;
+});
+
+// tool moving event
+canvas.addEventListener("tool-moved", () => {
+  canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+  lines.forEach((cmd) => cmd.display(canvasContext));
+  if (currentLine) {
+    currentLine.display(canvasContext);
+  }
+  if (toolPreview) {
+    toolPreview.draw(canvasContext);
+  }
 });
