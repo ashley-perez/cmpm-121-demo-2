@@ -3,7 +3,7 @@ import { Line } from "./Line.ts";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
-const gameName = "TESTING";
+const gameName = "SketchPad";
 
 document.title = gameName;
 
@@ -12,6 +12,9 @@ header.innerHTML = gameName;
 app.append(header);
 
 const zero = 0;
+const thin = 2;
+const thick = 5;
+let currentThickness = 2;
 
 // canvas to draw on
 const canvas = document.createElement("canvas");
@@ -40,6 +43,16 @@ const redoButton = document.createElement("button");
 redoButton.innerText = "redo";
 buttonContainer.append(redoButton);
 
+// thin and thick button tools
+const thinMarkerButton = document.createElement("button");
+thinMarkerButton.innerText = "thin";
+thinMarkerButton.classList.add("selectedTool");
+buttonContainer.append(thinMarkerButton);
+
+const thickMarkerButton = document.createElement("button");
+thickMarkerButton.innerText = "thick";
+buttonContainer.append(thickMarkerButton);
+
 const canvasContext = canvas.getContext("2d")!;
 let cursorIsMoving = false;
 
@@ -53,7 +66,7 @@ canvas.addEventListener("mousedown", (event) => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    currentLine = new Line(x, y);
+    currentLine = new Line(x, y, currentThickness);
 });
 
 // if mouse is up then stop drawing
@@ -98,6 +111,19 @@ redoButton.addEventListener("click", () => {
         lines.push(commandToRedo!);
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
+});
+
+// change line thickness
+thinMarkerButton.addEventListener("click", function () {
+    currentThickness = thin;
+    thinMarkerButton.classList.add("selectedTool");
+    thickMarkerButton.classList.remove("selectedTool");
+});
+
+thickMarkerButton.addEventListener("click", function () {
+    currentThickness = thick;
+    thickMarkerButton.classList.add("selectedTool");
+    thinMarkerButton.classList.remove("selectedTool");
 });
 
 canvas.addEventListener("drawing-changed", () => {
