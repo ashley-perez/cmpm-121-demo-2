@@ -35,6 +35,12 @@ export class LinePreview {
     y: number;
     thickness: number;
 
+    // readonly is basically like const
+    // from my understanding...
+    private static readonly start = 0;
+    private static readonly end = 2 * Math.PI;
+    private static readonly two = 2;
+
     constructor(x: number, y: number, thickness: number) {
         this.x = x;
         this.y = y;
@@ -43,7 +49,7 @@ export class LinePreview {
 
     draw(context: CanvasRenderingContext2D) {
         context.beginPath();
-        context.arc(this.x, this.y, this.thickness / 2, 0, 2 * Math.PI); // circle to represent the tool thickness
+        context.arc(this.x, this.y, this.thickness / LinePreview.two, LinePreview.start, LinePreview.end); // circle to represent the tool thickness
         context.fill();
     }
 }
