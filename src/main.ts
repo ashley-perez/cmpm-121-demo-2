@@ -49,65 +49,65 @@ const redoStack: Line[] = [];
 
 // see if mouse is down and do things
 canvas.addEventListener("mousedown", (event) => {
-    cursorIsMoving = true;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    currentLine = new Line(x, y);
+  cursorIsMoving = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  currentLine = new Line(x, y);
 });
 
 // if mouse is up then stop drawing
 canvas.addEventListener("mouseup", () => {
-    if (currentLine) {
-        lines.push(currentLine);
-        currentLine = null;
-    }
-    cursorIsMoving = false;
-    canvas.dispatchEvent(new Event("drawing-changed"));
+  if (currentLine) {
+    lines.push(currentLine);
+    currentLine = null;
+  }
+  cursorIsMoving = false;
+  canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
 // lots of braincells were used unfortuneatly
 canvas.addEventListener("mousemove", (event) => {
-    if (!cursorIsMoving || !currentLine) return;
+  if (!cursorIsMoving || !currentLine) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
 
-    currentLine.extendLine(x, y);
+  currentLine.extendLine(x, y);
 
-    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.forEach((cmd) => cmd.display(canvasContext));
-    if (currentLine) {
-        currentLine.display(canvasContext);
-    }
+  canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+  lines.forEach((cmd) => cmd.display(canvasContext));
+  if (currentLine) {
+    currentLine.display(canvasContext);
+  }
 });
 
 // undo and redo button click event
 undoButton.addEventListener("click", () => {
-    if (lines.length) {
-        const lastCommand = lines.pop();
-        redoStack.push(lastCommand!);
-        canvas.dispatchEvent(new Event("drawing-changed"));
-    }
+  if (lines.length) {
+    const lastCommand = lines.pop();
+    redoStack.push(lastCommand!);
+    canvas.dispatchEvent(new Event("drawing-changed"));
+  }
 });
 
 redoButton.addEventListener("click", () => {
-    if (redoStack.length) {
-        const commandToRedo = redoStack.pop();
-        lines.push(commandToRedo!);
-        canvas.dispatchEvent(new Event("drawing-changed"));
-    }
+  if (redoStack.length) {
+    const commandToRedo = redoStack.pop();
+    lines.push(commandToRedo!);
+    canvas.dispatchEvent(new Event("drawing-changed"));
+  }
 });
 
 canvas.addEventListener("drawing-changed", () => {
-    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.forEach((cmd) => cmd.display(canvasContext));
+  canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+  lines.forEach((cmd) => cmd.display(canvasContext));
 });
 
 // implement the clear button fucntionality
 clearButton.addEventListener("click", () => {
-    canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.length = 0;
-    redoStack.length = 0;
+  canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
+  lines.length = 0;
+  redoStack.length = 0;
 });
