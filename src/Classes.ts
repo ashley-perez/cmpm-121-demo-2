@@ -68,6 +68,7 @@ export class Sticker implements DrawableItem {
     y: number;
     emoji: string;
     size: number;
+    isDragging = false;
 
     constructor(x: number, y: number, emoji: string, size: number) {
         this.x = x;

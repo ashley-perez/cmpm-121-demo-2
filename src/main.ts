@@ -105,6 +105,18 @@ canvas.addEventListener("mousedown", (event) => {
 
   toolPreview = null; // so we dont show the preview when clicking
 
+  const selectedSticker = lines.find(line =>
+    line instanceof Sticker &&
+    line.x <= x &&
+    line.x + line.size >= x &&
+    line.y - line.size <= y &&
+    line.y >= y
+  );
+  if (selectedSticker) {
+    (selectedSticker as Sticker).isDragging = true;
+    return;
+  }
+
   if (currentSticker) {
     const sticker = new Sticker(x, y, currentSticker, stickerSize);
     lines.push(sticker);
@@ -120,6 +132,15 @@ canvas.addEventListener("mouseup", () => {
     currentLine = null;
   }
   cursorIsMoving = false;
+
+  const draggingSticker = lines.find(line =>
+    line instanceof Sticker &&
+    line.isDragging
+  );
+  if (draggingSticker) {
+    (draggingSticker as Sticker).isDragging = false;
+  }
+
   canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
@@ -130,6 +151,20 @@ canvas.addEventListener("mousemove", (event) => {
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
 
+  const draggableSticker = lines.find(line => line instanceof Sticker && line.isDragging);
+
+  // if a sticker is being dragged we update and exit this
+  // so we don't draw a line
+  if (draggableSticker) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    (draggableSticker as Sticker).x = x;
+    (draggableSticker as Sticker).y = y;
+    return;  // Don't proceed with line drawing
+  }
+
   // start drawing the line
   if (cursorIsMoving && currentLine) {
     currentLine.extendLine(x, y);
@@ -138,6 +173,18 @@ canvas.addEventListener("mousemove", (event) => {
     if (currentLine) {
       currentLine.display(canvasContext);
     }
+  }
+
+  // try to find sticker in line array and if it exists then drag it
+  const draggingSticker = lines.find(line =>
+    line instanceof Sticker &&
+    line.isDragging
+  );
+  if (draggingSticker) {
+    (draggingSticker as Sticker).x = x;
+    (draggingSticker as Sticker).y = y;
+    canvas.dispatchEvent(new Event("drawing-changed"));
+    return; // don't want to draw a line
   }
 
   // show the preview
