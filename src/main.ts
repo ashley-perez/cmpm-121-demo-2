@@ -54,37 +54,53 @@ const thickMarkerButton = document.createElement("button");
 thickMarkerButton.innerText = "thick";
 buttonContainer.append(thickMarkerButton);
 
-
 // sticker buttons
-const starStickerButton = document.createElement("button");
-starStickerButton.innerText = "⭐";
-buttonContainer.append(starStickerButton);
+interface StickerType {
+  emoji: string;
+  button: HTMLButtonElement | null;
+}
 
-const rainbowStickerButton = document.createElement("button");
-rainbowStickerButton.innerText = "🌈";
-buttonContainer.append(rainbowStickerButton);
-
-const turtleStickerButton = document.createElement("button");
-turtleStickerButton.innerText = "🐢";
-buttonContainer.append(turtleStickerButton);
+const stickers: StickerType[] = [
+  { emoji: "⭐", button: null },
+  { emoji: "🌈", button: null },
+  { emoji: "🐢", button: null }
+];
 
 let currentSticker: string | null = null;
 
-rainbowStickerButton.addEventListener("click", () => {
-  currentSticker = "🌈";
-  canvas.dispatchEvent(new Event("tool-changed"));
+stickers.forEach(sticker => {
+  const button = document.createElement("button");
+  button.innerText = sticker.emoji;
+  buttonContainer.append(button);
+
+  sticker.button = button;
+
+  button.addEventListener("click", () => {
+    currentSticker = sticker.emoji;
+    canvas.dispatchEvent(new Event("tool-changed"));
+  });
 });
 
-starStickerButton.addEventListener("click", () => {
-  currentSticker = "⭐";
-  canvas.dispatchEvent(new Event("tool-changed"));
-});
+const addStickerButton = document.createElement("button");
+addStickerButton.innerText = "Add Sticker";
+buttonContainer.append(addStickerButton);
 
-turtleStickerButton.addEventListener("click", () => {
-  currentSticker = "🐢";
-  canvas.dispatchEvent(new Event("tool-changed"));
-});
+addStickerButton.addEventListener("click", () => {
+  const customEmoji = prompt("Enter your custom sticker:", ":)");
+  if (customEmoji) {
+    const button = document.createElement("button");
+    button.innerText = customEmoji;
+    buttonContainer.append(button);
 
+    // add sticker to array
+    stickers.push({ emoji: customEmoji, button: button });
+
+    button.addEventListener("click", () => {
+      currentSticker = customEmoji;
+      canvas.dispatchEvent(new Event("tool-changed"));
+    });
+  }
+});
 
 const canvasContext = canvas.getContext("2d")!;
 let cursorIsMoving = false;
@@ -162,7 +178,7 @@ canvas.addEventListener("mousemove", (event) => {
 
     (draggableSticker as Sticker).x = x;
     (draggableSticker as Sticker).y = y;
-    return;  // Don't proceed with line drawing
+    return;
   }
 
   // start drawing the line
