@@ -13,9 +13,9 @@ app.append(header);
 
 const zero = 0;
 const thin = 2;
-const thick = 5;
-let currentThickness = 2;
-const stickerSize = 20;
+const thick = 6;
+let currentThickness = 2.5;
+const stickerSize = 30;
 
 // canvas to draw on
 const canvas = document.createElement("canvas");
@@ -89,7 +89,9 @@ interface StickerType {
 const stickers: StickerType[] = [
   { emoji: "⭐", button: null },
   { emoji: "🌈", button: null },
-  { emoji: "🐢", button: null }
+  { emoji: "🐢", button: null },
+  { emoji: "💗", button: null },
+  { emoji: "🫶", button: null }
 ];
 
 let currentSticker: string | null = null;
@@ -240,7 +242,7 @@ canvas.addEventListener("mousemove", (event) => {
     // show the sticker preview
     canvasContext.clearRect(zero, zero, canvas.width, canvas.height);
     lines.forEach((cmd) => cmd.display(canvasContext));
-    canvasContext.font = "20px serif";
+    canvasContext.font = "30px serif";
     canvasContext.fillText(currentSticker, x, y);
   }
 });
