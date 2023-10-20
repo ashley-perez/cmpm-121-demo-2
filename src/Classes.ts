@@ -5,10 +5,12 @@ export interface DrawableItem {
 export class Line implements DrawableItem {
     private points: { x: number; y: number }[] = [];
     public thickness: number;
+    public color: string;
 
-    constructor(initialX: number, initialY: number, thickness: number) {
+    constructor(initialX: number, initialY: number, thickness: number, color: string) {
         this.points.push({ x: initialX, y: initialY });
         this.thickness = thickness;
+        this.color = color;
     }
 
     extendLine(x: number, y: number) {
@@ -17,6 +19,7 @@ export class Line implements DrawableItem {
 
     display(context: CanvasRenderingContext2D) {
         context.lineWidth = this.thickness;
+        context.strokeStyle = this.color; // change the line color
 
         if (!this.points.length) {
             return;
@@ -38,6 +41,7 @@ export class LinePreview {
     x: number;
     y: number;
     thickness: number;
+    color: string;
 
     // readonly is basically like const
     // from my understanding...
@@ -50,15 +54,17 @@ export class LinePreview {
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     private static readonly two = 2;
 
-    constructor(x: number, y: number, thickness: number) {
+    constructor(x: number, y: number, thickness: number, color: string) {
         this.x = x;
         this.y = y;
         this.thickness = thickness;
+        this.color = color;
     }
 
     draw(context: CanvasRenderingContext2D) {
         context.beginPath();
         context.arc(this.x, this.y, this.thickness / LinePreview.two, LinePreview.start, LinePreview.end); // circle to represent the tool thickness
+        context.fillStyle = this.color;
         context.fill();
     }
 }

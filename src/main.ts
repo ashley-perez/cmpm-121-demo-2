@@ -12,9 +12,9 @@ header.innerHTML = gameName;
 app.append(header);
 
 const zero = 0;
-const thin = 2;
+const thin = 3;
 const thick = 6;
-let currentThickness = 2.5;
+let currentThickness = 3;
 const stickerSize = 30;
 
 // canvas to draw on
@@ -91,8 +91,34 @@ const stickers: StickerType[] = [
   { emoji: "🌈", button: null },
   { emoji: "🐢", button: null },
   { emoji: "💗", button: null },
-  { emoji: "🫶", button: null }
+  { emoji: "🎁", button: null }
 ];
+
+
+let currentMarkerColor = "#000000";
+const someNum = 16777215;
+const sixteen = 16;
+
+// got this from https://css-tricks.com/snippets/javascript/random-hex-color/
+function getRandomColor() {
+  const randomColor = Math.floor(Math.random() * someNum).toString(sixteen);
+  return "#" + randomColor.toString();
+}
+
+// change line thickness
+thinMarkerButton.addEventListener("click", function () {
+  currentThickness = thin;
+  currentMarkerColor = getRandomColor();
+  thinMarkerButton.classList.add("selectedTool");
+  thickMarkerButton.classList.remove("selectedTool");
+});
+
+thickMarkerButton.addEventListener("click", function () {
+  currentThickness = thick;
+  currentMarkerColor = getRandomColor();
+  thickMarkerButton.classList.add("selectedTool");
+  thinMarkerButton.classList.remove("selectedTool");
+});
 
 let currentSticker: string | null = null;
 
@@ -145,7 +171,8 @@ canvas.addEventListener("mousedown", (event) => {
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
-  currentLine = new Line(x, y, currentThickness);
+
+  currentLine = new Line(x, y, currentThickness, currentMarkerColor);
 
   toolPreview = null; // so we dont show the preview when clicking
 
@@ -233,7 +260,7 @@ canvas.addEventListener("mousemove", (event) => {
 
   // show the preview
   if (!cursorIsMoving) {
-    toolPreview = new LinePreview(x, y, currentThickness);
+    toolPreview = new LinePreview(x, y, currentThickness, currentMarkerColor);
     canvas.dispatchEvent(new Event("tool-moved"));
   }
 
@@ -262,19 +289,6 @@ redoButton.addEventListener("click", () => {
     lines.push(commandToRedo!);
     canvas.dispatchEvent(new Event("drawing-changed"));
   }
-});
-
-// change line thickness
-thinMarkerButton.addEventListener("click", function () {
-  currentThickness = thin;
-  thinMarkerButton.classList.add("selectedTool");
-  thickMarkerButton.classList.remove("selectedTool");
-});
-
-thickMarkerButton.addEventListener("click", function () {
-  currentThickness = thick;
-  thickMarkerButton.classList.add("selectedTool");
-  thinMarkerButton.classList.remove("selectedTool");
 });
 
 canvas.addEventListener("drawing-changed", () => {
