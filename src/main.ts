@@ -54,6 +54,32 @@ const thickMarkerButton = document.createElement("button");
 thickMarkerButton.innerText = "thick";
 buttonContainer.append(thickMarkerButton);
 
+const exportButton = document.createElement("button");
+exportButton.innerText = "export";
+buttonContainer.append(exportButton);
+
+const canvasDimensions = 1024;
+const four = 4;
+
+exportButton.addEventListener("click", () => {
+
+  // new canvas
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = canvasDimensions;
+  exportCanvas.height = canvasDimensions;
+
+  const exportContext = exportCanvas.getContext("2d")!;
+  exportContext.scale(four, four);
+
+  lines.forEach((cmd) => cmd.display(exportContext));
+
+  // download the image
+  const anchor = document.createElement("a");
+  anchor.href = exportCanvas.toDataURL("image/png");
+  anchor.download = "sketchpad.png";
+  anchor.click();
+});
+
 // sticker buttons
 interface StickerType {
   emoji: string;
